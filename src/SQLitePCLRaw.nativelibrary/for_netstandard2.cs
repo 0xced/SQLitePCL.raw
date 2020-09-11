@@ -26,6 +26,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace SQLitePCL
@@ -400,6 +401,21 @@ namespace SQLitePCL
             }
             else
             {
+                var loadedModule = Process.GetCurrentProcess().Modules.Cast<ProcessModule>().LastOrDefault(m => m.ModuleName == basename);
+                if (loadedModule != null)
+                {
+                    var baseAddress = loadedModule.BaseAddress;
+                    if (baseAddress != IntPtr.Zero)
+                    {
+                        log($"found loaded module: {loadedModule.FileName}");
+                        return baseAddress;
+                    }
+                    log($"found a process module matching '{basename}' ({loadedModule.FileName}) but its base address was null");
+                }
+                else
+                {
+                    log($"no loaded module matching '{basename}' was found");
+                }
                 log("NOT FOUND");
                 return IntPtr.Zero;
             }
